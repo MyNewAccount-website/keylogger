@@ -81,8 +81,6 @@ try {
     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$InstallerPath`"" -NoNewWindow -Wait
 
     Remove-Item $InstallerPath -Force
-
-    Send-WebhookMessage "**Python installed successfully.**"
     }
 catch {
     Send-WebhookMessage "**Python installation failed!** Error: $($_.Exception.Message)"
@@ -108,3 +106,4 @@ Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Comm
 # Exit the script
 
 exit
+
